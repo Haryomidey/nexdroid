@@ -35,6 +35,7 @@ class NexDroidApp(ctk.CTk):
         self.title("NexDroid Control Center")
         self.geometry("1280x820")
         self.minsize(1040, 680)
+        self._open_fullscreen()
 
         self.event_queue: queue.Queue[dict[str, object]] = queue.Queue()
         self.adb_service = ADBService(adb_path=self.config_model.adb_path)
@@ -47,6 +48,14 @@ class NexDroidApp(ctk.CTk):
         self.device_worker.start()
         self.after(250, self._drain_events)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    def _open_fullscreen(self) -> None:
+        try:
+            self.state("zoomed")
+        except ctk.tkinter.TclError:
+            width = self.winfo_screenwidth()
+            height = self.winfo_screenheight()
+            self.geometry(f"{width}x{height}+0+0")
 
     def _build_layout(self) -> None:
         self.grid_columnconfigure(1, weight=1)
