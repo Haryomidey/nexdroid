@@ -36,6 +36,22 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## Build Desktop App
+
+Install build tooling:
+
+```powershell
+pip install -r requirements-dev.txt
+```
+
+Build the Windows desktop app and create a Desktop shortcut:
+
+```powershell
+.\build.ps1
+```
+
+The executable will be created in `dist\NexDroid Control Center\`, and the shortcut will be created on your Desktop.
+
 ## Connect A Device
 
 ### USB
