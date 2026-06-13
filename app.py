@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import queue
+import sys
 from typing import Callable
 
 import customtkinter as ctk
@@ -33,23 +34,34 @@ class NexDroidApp(ctk.CTk):
         super().__init__()
 
         self.title("NexDroid Control Center")
-        self.geometry("1280x820")
         self.minsize(1040, 680)
-        self._open_fullscreen()
 
         self.event_queue: queue.Queue[dict[str, object]] = queue.Queue()
         self.adb_service = ADBService(adb_path=self.config_model.adb_path)
         self.device_worker = DeviceWorker(self.adb_service, self.event_queue)
+        self.page_factories: dict[str, Callable[[ctk.CTkFrame], ctk.CTkFrame]] = {}
         self.pages: dict[str, ctk.CTkFrame] = {}
+        self.active_page: ctk.CTkFrame | None = None
 
         self._build_layout()
         self._register_pages()
         self.show_page("Dashboard")
+        self._open_fullscreen()
         self.device_worker.start()
         self.after(250, self._drain_events)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _open_fullscreen(self) -> None:
+        if sys.platform == "win32":
+            try:
+                import ctypes
+
+                self.update_idletasks()
+                ctypes.windll.user32.ShowWindow(self.winfo_id(), 3)
+                return
+            except (AttributeError, OSError, ctk.tkinter.TclError):
+                pass
+
         try:
             self.state("zoomed")
         except ctk.tkinter.TclError:
@@ -120,7 +132,7 @@ class NexDroidApp(ctk.CTk):
         self.content.grid_columnconfigure(0, weight=1)
 
     def _register_pages(self) -> None:
-        page_factories: dict[str, Callable[[ctk.CTkFrame], ctk.CTkFrame]] = {
+        self.page_factories = {
             "Dashboard": lambda parent: DashboardPage(parent, self.adb_service, on_navigate=self.show_page),
             "Devices": lambda parent: DevicePage(parent, self.adb_service),
             "Mirror": lambda parent: MirrorPage(parent),
@@ -134,16 +146,29 @@ class NexDroidApp(ctk.CTk):
             "Settings": lambda parent: SettingsPage(parent, self.config_model, on_theme_change=self.set_theme),
         }
 
-        for name, factory in page_factories.items():
-            page = factory(self.content)
-            page.grid(row=0, column=0, sticky="nsew")
-            self.pages[name] = page
-
     def show_page(self, name: str) -> None:
         self.sidebar.set_active(name)
+        page = self._get_page(name)
+        if page is not None:
+            previous_page = self.active_page
+            page.grid(row=0, column=0, sticky="nsew")
+            page.tkraise()
+            self.active_page = page
+            if previous_page is not None and previous_page is not page:
+                previous_page.grid_remove()
+
+    def _get_page(self, name: str) -> ctk.CTkFrame | None:
         page = self.pages.get(name)
         if page is not None:
-            page.tkraise()
+            return page
+
+        factory = self.page_factories.get(name)
+        if factory is None:
+            return None
+
+        page = factory(self.content)
+        self.pages[name] = page
+        return page
 
     def _drain_events(self) -> None:
         while True:
