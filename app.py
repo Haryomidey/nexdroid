@@ -109,6 +109,7 @@ class NexDroidApp(ctk.CTk):
 
         self.connection_badge = ctk.CTkFrame(
             self.top_bar,
+            width=300,
             height=30,
             corner_radius=999,
             fg_color=BADGE_IDLE,
@@ -117,14 +118,17 @@ class NexDroidApp(ctk.CTk):
         )
         self.connection_badge.grid(row=0, column=2, padx=24, pady=16, sticky="e")
         self.connection_badge.grid_propagate(False)
+        self.connection_badge.grid_columnconfigure(0, weight=1)
+        self.connection_badge.grid_rowconfigure(0, weight=1)
 
         self.connection_badge_label = ctk.CTkLabel(
             self.connection_badge,
             text="ADB idle",
             text_color=ACCENT,
             font=ctk.CTkFont(size=12, weight="bold"),
+            anchor="center",
         )
-        self.connection_badge_label.grid(row=0, column=0, padx=14, pady=4)
+        self.connection_badge_label.grid(row=0, column=0, padx=14, pady=0, sticky="nsew")
 
         self.content = ctk.CTkFrame(self, fg_color=APP_BG, corner_radius=0)
         self.content.grid(row=1, column=1, sticky="nsew")

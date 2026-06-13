@@ -16,6 +16,9 @@ class AppsPage(ctk.CTkFrame):
     def __init__(self, master: ctk.CTkFrame, adb_service: ADBService) -> None:
         super().__init__(master, fg_color=APP_BG, corner_radius=0)
         self.adb_service = adb_service
+        self.filter_mode = "ALL"
+        self.packages: list[str] = []
+        self.filter_buttons: dict[str, ctk.CTkButton] = {}
         self._build()
 
     def _build(self) -> None:
@@ -33,14 +36,16 @@ class AppsPage(ctk.CTkFrame):
         toolbar = ctk.CTkFrame(self, fg_color="transparent")
         toolbar.grid(row=1, column=0, padx=24, sticky="ew")
         toolbar.grid_columnconfigure(0, weight=1)
-        themed_entry(toolbar, "Search by application title or reverseDNS package label...").grid(
+        self.search_entry = themed_entry(toolbar, "Search by application title or reverseDNS package label...")
+        self.search_entry.grid(
             row=0, column=0, sticky="ew", padx=(0, 12)
         )
+        self.search_entry.bind("<KeyRelease>", lambda _event: self._render_packages(self.packages))
 
         pills = ctk.CTkFrame(toolbar, fg_color=CARD, corner_radius=8, border_width=1, border_color=BORDER)
         pills.grid(row=0, column=1, sticky="e")
         for index, label in enumerate(["ALL", "USER", "SYSTEM"]):
-            ctk.CTkButton(
+            button = ctk.CTkButton(
                 pills,
                 text=label,
                 width=72,
@@ -48,10 +53,12 @@ class AppsPage(ctk.CTkFrame):
                 corner_radius=6,
                 fg_color=ACCENT if index == 0 else "transparent",
                 hover_color="#1a8cd8" if index == 0 else "#18181c",
-                text_color="#ffffff" if index == 0 else TEXT_MUTED,
-                command=None,
-                state="disabled",
-            ).grid(row=0, column=index, padx=3, pady=3)
+                text_color="#ffffff" if index == 0 else TEXT_SOFT,
+                font=ctk.CTkFont(size=12, weight="bold"),
+                command=lambda value=label: self._set_filter(value),
+            )
+            button.grid(row=0, column=index, padx=3, pady=3)
+            self.filter_buttons[label] = button
 
         self.list_panel = Panel(self)
         self.list_panel.grid(row=2, column=0, padx=24, pady=18, sticky="nsew")
@@ -75,14 +82,46 @@ class AppsPage(ctk.CTkFrame):
         self.after(0, lambda: self._render_packages(packages))
 
     def _render_packages(self, packages: list[str]) -> None:
+        self.packages = packages
         self._clear_rows()
-        if not packages:
+        filtered_packages = self._filtered_packages()
+        if not filtered_packages:
             EmptyState(self.rows, "No active application records", "No packages were returned, or no authorized device is connected.", "apps").grid(
                 row=0, column=0, pady=48
             )
             return
-        for index, package in enumerate(packages):
+        for index, package in enumerate(filtered_packages):
             self._add_package_row(index, package)
+
+    def _set_filter(self, value: str) -> None:
+        self.filter_mode = value
+        for label, button in self.filter_buttons.items():
+            is_active = label == value
+            button.configure(
+                fg_color=ACCENT if is_active else "transparent",
+                hover_color="#1a8cd8" if is_active else "#18181c",
+                text_color="#ffffff" if is_active else TEXT_SOFT,
+            )
+        self._render_packages(self.packages)
+
+    def _filtered_packages(self) -> list[str]:
+        query = self.search_entry.get().strip().lower()
+
+        def is_system_package(package: str) -> bool:
+            value = package.lower()
+            return any(prefix in value for prefix in ["/system/", "/product/", "/vendor/", "/apex/"])
+
+        filtered = []
+        for package in self.packages:
+            lower_package = package.lower()
+            if query and query not in lower_package:
+                continue
+            if self.filter_mode == "USER" and is_system_package(package):
+                continue
+            if self.filter_mode == "SYSTEM" and not is_system_package(package):
+                continue
+            filtered.append(package)
+        return filtered
 
     def _clear_rows(self) -> None:
         for child in self.rows.winfo_children():

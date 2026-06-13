@@ -82,7 +82,7 @@ class Sidebar(ctk.CTkFrame):
                 fg_color="transparent",
                 hover_color="#151518",
                 text_color=TEXT_NAV,
-                font=ctk.CTkFont(size=13, weight="bold"),
+                font=ctk.CTkFont(size=14, weight="bold"),
                 command=lambda value=item: self.on_select(value),
             )
             button.grid(row=index, column=0, padx=10, pady=2, sticky="ew")
