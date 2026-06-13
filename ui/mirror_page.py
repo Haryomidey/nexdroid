@@ -31,7 +31,7 @@ class MirrorPage(ctk.CTkFrame):
         SectionTitle(preview, "Device Viewport", "Live frames will render when the mirror backend is attached.").grid(
             row=0, column=0, padx=18, pady=(16, 10), sticky="ew"
         )
-        EmptyState(preview, "Mirror preview offline", "Connect an authorized device and start mirroring to view and control the screen.", "VIEW").grid(
+        EmptyState(preview, "Mirror preview offline", "Connect an authorized device and start mirroring to view and control the screen.", "mirror").grid(
             row=1, column=0
         )
 
@@ -42,7 +42,7 @@ class MirrorPage(ctk.CTkFrame):
             row=0, column=0, padx=18, pady=(16, 12), sticky="ew"
         )
         for index, label in enumerate(["Start Mirror", "Screenshot", "Record", "Rotate", "Fullscreen", "Scale Fit"], start=1):
-            ToolbarButton(controls, label, accent=index == 1).grid(row=index, column=0, padx=18, pady=5, sticky="ew")
+            ToolbarButton(controls, label, accent=index == 1, enabled=False).grid(row=index, column=0, padx=18, pady=5, sticky="ew")
         ctk.CTkLabel(
             controls,
             text="Mouse interaction, keyboard typing, and touch simulation will be enabled by the mirror backend.",

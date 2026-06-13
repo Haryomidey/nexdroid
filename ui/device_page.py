@@ -19,9 +19,13 @@ class DevicePage(ctk.CTkFrame):
 
     def _build(self) -> None:
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        header_row = ctk.CTkFrame(self, fg_color="transparent")
+        body = ctk.CTkScrollableFrame(self, fg_color=APP_BG, corner_radius=0)
+        body.grid(row=0, column=0, sticky="nsew")
+        body.grid_columnconfigure(0, weight=1)
+
+        header_row = ctk.CTkFrame(body, fg_color="transparent")
         header_row.grid(row=0, column=0, padx=24, pady=(22, 16), sticky="ew")
         header_row.grid_columnconfigure(0, weight=1)
         PageHeader(header_row, "Device Node Manager", "Manage USB connections and wireless LAN ADB bridges.").grid(
@@ -29,8 +33,8 @@ class DevicePage(ctk.CTkFrame):
         )
         ToolbarButton(header_row, "Re-scan Buses", command=self._refresh).grid(row=0, column=1, padx=(16, 0), sticky="e")
 
-        grid = ctk.CTkFrame(self, fg_color="transparent")
-        grid.grid(row=1, column=0, padx=24, pady=(0, 24), sticky="nsew")
+        grid = ctk.CTkFrame(body, fg_color="transparent")
+        grid.grid(row=1, column=0, padx=24, pady=(0, 24), sticky="ew")
         grid.grid_columnconfigure(0, weight=1)
         grid.grid_columnconfigure(1, weight=2)
         grid.grid_rowconfigure(0, weight=1)

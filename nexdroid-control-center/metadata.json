@@ -1,0 +1,6 @@
+{
+  "name": "NexDroid Control Center",
+  "description": "Premium modern local and remote Android device control panel, terminal console, and file/app manager.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

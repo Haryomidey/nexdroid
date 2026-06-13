@@ -20,10 +20,16 @@ class SettingsPage(ctk.CTkFrame):
 
     def _build(self) -> None:
         self.grid_columnconfigure(0, weight=1)
-        PageHeader(self, "Settings", "Theme, ADB path, folders, wireless debugging, and refresh intervals.").grid(
+        self.grid_rowconfigure(0, weight=1)
+
+        body = ctk.CTkScrollableFrame(self, fg_color=APP_BG, corner_radius=0)
+        body.grid(row=0, column=0, sticky="nsew")
+        body.grid_columnconfigure(0, weight=1)
+
+        PageHeader(body, "Settings", "Theme, ADB path, folders, wireless debugging, and refresh intervals.").grid(
             row=0, column=0, padx=24, pady=(22, 16), sticky="ew"
         )
-        panel = Panel(self)
+        panel = Panel(body)
         panel.grid(row=1, column=0, padx=24, sticky="ew")
         panel.grid_columnconfigure(1, weight=1)
 
@@ -39,7 +45,7 @@ class SettingsPage(ctk.CTkFrame):
         ctk.CTkLabel(panel, text="Theme", text_color=TEXT_MUTED).grid(row=2, column=0, padx=18, pady=12, sticky="w")
         theme_menu = ctk.CTkOptionMenu(
             panel,
-            values=["Dark", "Light", "System"],
+            values=["Website Dark"],
             command=self.on_theme_change,
             fg_color=PANEL_DEEP,
             button_color="#1da1f2",
@@ -49,10 +55,10 @@ class SettingsPage(ctk.CTkFrame):
             dropdown_text_color=TEXT,
             dropdown_hover_color="#18181c",
         )
-        theme_menu.set(self.config.theme.capitalize())
+        theme_menu.set("Website Dark")
         theme_menu.grid(row=2, column=1, padx=18, pady=12, sticky="w")
 
-        folders = Panel(self)
+        folders = Panel(body)
         folders.grid(row=2, column=0, padx=24, pady=18, sticky="ew")
         folders.grid_columnconfigure(1, weight=1)
         SectionTitle(folders, "Local Folders", "Default output locations for captures and transfers.").grid(

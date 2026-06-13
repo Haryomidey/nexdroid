@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import customtkinter as ctk
 
+from ui.icons import get_icon
 from ui.theme import ACCENT, BORDER, CARD, CARD_HOVER, PANEL_DEEP, TEXT, TEXT_MUTED, TEXT_SOFT, TEXT_SUBTLE
 
 
@@ -57,10 +58,20 @@ class SectionTitle(ctk.CTkFrame):
 class ActionTile(ctk.CTkButton):
     """Dashboard-style action tile."""
 
-    def __init__(self, master: ctk.CTkFrame, title: str, icon: str, accent: bool = False, command=None) -> None:
+    def __init__(
+        self,
+        master: ctk.CTkFrame,
+        title: str,
+        icon: str,
+        accent: bool = False,
+        command=None,
+        enabled: bool = True,
+    ) -> None:
         super().__init__(
             master,
-            text=f"{icon}\n{title}",
+            text=title,
+            image=get_icon(icon, size=28, color=ACCENT if accent else TEXT_SOFT),
+            compound="top",
             height=92,
             corner_radius=12,
             fg_color=CARD,
@@ -70,13 +81,14 @@ class ActionTile(ctk.CTkButton):
             text_color=ACCENT if accent else TEXT_SOFT,
             font=ctk.CTkFont(size=12, weight="bold"),
             command=command,
+            state="normal" if enabled else "disabled",
         )
 
 
 class ToolbarButton(ctk.CTkButton):
     """Compact toolbar button matching the web app controls."""
 
-    def __init__(self, master: ctk.CTkFrame, text: str, command=None, accent: bool = False) -> None:
+    def __init__(self, master: ctk.CTkFrame, text: str, command=None, accent: bool = False, enabled: bool = True) -> None:
         super().__init__(
             master,
             text=text,
@@ -89,6 +101,7 @@ class ToolbarButton(ctk.CTkButton):
             text_color="#ffffff" if accent else ACCENT,
             font=ctk.CTkFont(size=12, weight="bold"),
             command=command,
+            state="normal" if enabled else "disabled",
         )
 
 
@@ -97,7 +110,7 @@ class EmptyState(ctk.CTkFrame):
 
     def __init__(self, master: ctk.CTkFrame, title: str, message: str, icon: str = "N") -> None:
         super().__init__(master, fg_color="transparent")
-        ctk.CTkLabel(self, text=icon, text_color=ACCENT, font=ctk.CTkFont(size=42, weight="bold")).grid(
+        ctk.CTkLabel(self, text="", image=get_icon(icon, size=44, color=ACCENT)).grid(
             row=0, column=0, pady=(0, 10)
         )
         ctk.CTkLabel(self, text=title, text_color=TEXT, font=ctk.CTkFont(size=16, weight="bold")).grid(

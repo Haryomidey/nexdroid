@@ -6,6 +6,7 @@ import customtkinter as ctk
 
 from services.adb_service import ADBService
 from ui.components import EmptyState, PageHeader, Panel, ToolbarButton, themed_entry
+from ui.icons import get_icon
 from ui.theme import ACCENT, APP_BG, BORDER, CARD, PANEL_DEEP, TEXT, TEXT_MUTED, TEXT_SOFT, TEXT_SUBTLE
 
 
@@ -49,6 +50,7 @@ class AppsPage(ctk.CTkFrame):
                 hover_color="#1a8cd8" if index == 0 else "#18181c",
                 text_color="#ffffff" if index == 0 else TEXT_MUTED,
                 command=None,
+                state="disabled",
             ).grid(row=0, column=index, padx=3, pady=3)
 
         self.list_panel = Panel(self)
@@ -59,13 +61,13 @@ class AppsPage(ctk.CTkFrame):
         self.rows = ctk.CTkScrollableFrame(self.list_panel, fg_color="transparent")
         self.rows.grid(row=0, column=0, padx=12, pady=12, sticky="nsew")
         self.rows.grid_columnconfigure(0, weight=1)
-        EmptyState(self.rows, "No application records", "Load packages from an authorized device to populate the registry.", "APP").grid(
+        EmptyState(self.rows, "No application records", "Load packages from an authorized device to populate the registry.", "apps").grid(
             row=0, column=0, pady=48
         )
 
     def _load_apps(self) -> None:
         self._clear_rows()
-        EmptyState(self.rows, "Loading registry", "Reading package records from ADB...", "ADB").grid(row=0, column=0, pady=48)
+        EmptyState(self.rows, "Loading registry", "Reading package records from ADB...", "terminal").grid(row=0, column=0, pady=48)
         threading.Thread(target=self._load_apps_background, daemon=True).start()
 
     def _load_apps_background(self) -> None:
@@ -75,7 +77,7 @@ class AppsPage(ctk.CTkFrame):
     def _render_packages(self, packages: list[str]) -> None:
         self._clear_rows()
         if not packages:
-            EmptyState(self.rows, "No active application records", "No packages were returned, or no authorized device is connected.", "APP").grid(
+            EmptyState(self.rows, "No active application records", "No packages were returned, or no authorized device is connected.", "apps").grid(
                 row=0, column=0, pady=48
             )
             return
@@ -93,7 +95,7 @@ class AppsPage(ctk.CTkFrame):
         row.grid(row=index, column=0, pady=5, sticky="ew")
         row.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(row, text="APP", text_color=ACCENT, fg_color="#0d2230", corner_radius=8, width=52).grid(
+        ctk.CTkLabel(row, text="", image=get_icon("apps", size=24, color=ACCENT), fg_color="#0d2230", corner_radius=8, width=52).grid(
             row=0, column=0, rowspan=2, padx=14, pady=14
         )
         ctk.CTkLabel(row, text=app_name or "Android Package", text_color=TEXT, font=ctk.CTkFont(size=14, weight="bold")).grid(
@@ -114,4 +116,5 @@ class AppsPage(ctk.CTkFrame):
                 border_width=1,
                 border_color=BORDER,
                 text_color=TEXT_SOFT if label != "Run" else ACCENT,
+                state="disabled",
             ).grid(row=0, column=column, rowspan=2, padx=(0, 8), pady=14)

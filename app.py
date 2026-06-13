@@ -9,9 +9,12 @@ from services.adb_service import ADBService
 from ui.apps_page import AppsPage
 from ui.dashboard import DashboardPage
 from ui.device_page import DevicePage
+from ui.developer_tools_page import DeveloperToolsPage
 from ui.files_page import FilesPage
 from ui.logs_page import LogsPage
 from ui.mirror_page import MirrorPage
+from ui.recordings_page import RecordingsPage
+from ui.screenshots_page import ScreenshotsPage
 from ui.settings_page import SettingsPage
 from ui.sidebar import Sidebar
 from ui.terminal_page import TerminalPage
@@ -25,7 +28,7 @@ class NexDroidApp(ctk.CTk):
 
     def __init__(self) -> None:
         self.config_model = AppConfig.load()
-        ctk.set_appearance_mode(self.config_model.theme)
+        ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
         super().__init__()
 
@@ -109,15 +112,15 @@ class NexDroidApp(ctk.CTk):
 
     def _register_pages(self) -> None:
         page_factories: dict[str, Callable[[ctk.CTkFrame], ctk.CTkFrame]] = {
-            "Dashboard": lambda parent: DashboardPage(parent, self.adb_service),
+            "Dashboard": lambda parent: DashboardPage(parent, self.adb_service, on_navigate=self.show_page),
             "Devices": lambda parent: DevicePage(parent, self.adb_service),
             "Mirror": lambda parent: MirrorPage(parent),
             "Apps": lambda parent: AppsPage(parent, self.adb_service),
             "Files": lambda parent: FilesPage(parent),
-            "Screenshots": lambda parent: DashboardPage(parent, self.adb_service, title="Screenshots"),
-            "Recordings": lambda parent: DashboardPage(parent, self.adb_service, title="Recordings"),
+            "Screenshots": lambda parent: ScreenshotsPage(parent),
+            "Recordings": lambda parent: RecordingsPage(parent),
             "Logs": lambda parent: LogsPage(parent, self.adb_service),
-            "Developer Tools": lambda parent: DashboardPage(parent, self.adb_service, title="Developer Tools"),
+            "Developer Tools": lambda parent: DeveloperToolsPage(parent, self.adb_service),
             "ADB Console": lambda parent: TerminalPage(parent, self.adb_service),
             "Settings": lambda parent: SettingsPage(parent, self.config_model, on_theme_change=self.set_theme),
         }
@@ -156,12 +159,9 @@ class NexDroidApp(ctk.CTk):
         self.after(500, self._drain_events)
 
     def set_theme(self, theme: str) -> None:
-        normalized = theme.lower()
-        if normalized not in {"dark", "light", "system"}:
-            normalized = "dark"
-        self.config_model.theme = normalized
+        self.config_model.theme = "dark"
         self.config_model.save()
-        ctk.set_appearance_mode(normalized)
+        ctk.set_appearance_mode("dark")
 
     def _on_close(self) -> None:
         self.device_worker.stop()

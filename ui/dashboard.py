@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import customtkinter as ctk
+from collections.abc import Callable
 
 from services.adb_service import ADBService
 from ui.components import ActionTile, PageHeader, Panel, SectionTitle, StatCard
@@ -10,20 +11,31 @@ from ui.theme import ACCENT, APP_BG, BORDER, CARD, PANEL_DEEP, TEXT, TEXT_MUTED,
 class DashboardPage(ctk.CTkFrame):
     """Device overview and quick actions."""
 
-    def __init__(self, master: ctk.CTkFrame, adb_service: ADBService, title: str = "Dashboard") -> None:
+    def __init__(
+        self,
+        master: ctk.CTkFrame,
+        adb_service: ADBService,
+        title: str = "Dashboard",
+        on_navigate: Callable[[str], None] | None = None,
+    ) -> None:
         super().__init__(master, fg_color=APP_BG, corner_radius=0)
         self.adb_service = adb_service
+        self.on_navigate = on_navigate
         self.cards: dict[str, StatCard] = {}
         self._build(title)
 
     def _build(self, title: str) -> None:
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(4, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        header = PageHeader(self, title, "Monitor device health, connection state, and common ADB actions.")
+        body = ctk.CTkScrollableFrame(self, fg_color=APP_BG, corner_radius=0)
+        body.grid(row=0, column=0, sticky="nsew")
+        body.grid_columnconfigure(0, weight=1)
+
+        header = PageHeader(body, title, "Monitor device health, connection state, and common ADB actions.")
         header.grid(row=0, column=0, padx=24, pady=(22, 16), sticky="ew")
 
-        banner = Panel(self)
+        banner = Panel(body)
         banner.grid(row=1, column=0, padx=24, pady=(0, 16), sticky="ew")
         banner.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(
@@ -55,25 +67,25 @@ class DashboardPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=11, weight="bold"),
         ).grid(row=1, column=1, padx=18, sticky="e")
 
-        actions = ctk.CTkFrame(self, fg_color="transparent")
+        actions = ctk.CTkFrame(body, fg_color="transparent")
         actions.grid(row=2, column=0, padx=24, pady=(0, 16), sticky="ew")
         for column in range(6):
             actions.grid_columnconfigure(column, weight=1, uniform="actions")
 
         quick_actions = [
-            ("Mirror View", "MV", True),
-            ("Browse Files", "BF", True),
-            ("Capture Screen", "CS", False),
-            ("Apps Hub", "AH", False),
-            ("ADB Console", "AC", True),
-            ("Reboot Device", "RD", False),
+            ("Mirror View", "mirror", True, "Mirror"),
+            ("Browse Files", "folder", True, "Files"),
+            ("Capture Screen", "camera", False, "Screenshots"),
+            ("Apps Hub", "apps", False, "Apps"),
+            ("ADB Console", "terminal", True, "ADB Console"),
+            ("Reboot Device", "reboot", False, "Developer Tools"),
         ]
-        for index, (label, icon, accent) in enumerate(quick_actions):
-            ActionTile(actions, title=label, icon=icon, accent=accent).grid(
+        for index, (label, icon, accent, target) in enumerate(quick_actions):
+            ActionTile(actions, title=label, icon=icon, accent=accent, command=lambda page=target: self._navigate(page)).grid(
                 row=0, column=index, padx=5, sticky="ew"
             )
 
-        card_grid = ctk.CTkFrame(self, fg_color="transparent")
+        card_grid = ctk.CTkFrame(body, fg_color="transparent")
         card_grid.grid(row=3, column=0, padx=24, sticky="ew")
         for column in range(4):
             card_grid.grid_columnconfigure(column, weight=1, uniform="cards")
@@ -90,8 +102,8 @@ class DashboardPage(ctk.CTkFrame):
             card.grid(row=0, column=index, padx=6, pady=6, sticky="nsew")
             self.cards[label] = card
 
-        lower = ctk.CTkFrame(self, fg_color="transparent")
-        lower.grid(row=4, column=0, padx=24, pady=(16, 24), sticky="nsew")
+        lower = ctk.CTkFrame(body, fg_color="transparent")
+        lower.grid(row=4, column=0, padx=24, pady=(16, 24), sticky="ew")
         lower.grid_columnconfigure(0, weight=2)
         lower.grid_columnconfigure(1, weight=1)
         lower.grid_rowconfigure(0, weight=1)
@@ -103,8 +115,9 @@ class DashboardPage(ctk.CTkFrame):
             row=0, column=0, padx=18, pady=(16, 12), sticky="ew"
         )
         ctk.CTkFrame(graph, fg_color=PANEL_DEEP, corner_radius=10, border_width=1, border_color=BORDER).grid(
-            row=1, column=0, padx=18, pady=(0, 18), sticky="nsew"
+            row=1, column=0, padx=18, pady=(0, 18), sticky="ew"
         )
+        graph.grid_rowconfigure(1, minsize=240)
         graph.grid_rowconfigure(1, weight=1)
 
         info = Panel(lower)
@@ -128,3 +141,7 @@ class DashboardPage(ctk.CTkFrame):
                 row=index, column=1, padx=18, pady=7, sticky="e"
             )
         info.grid_columnconfigure(1, weight=1)
+
+    def _navigate(self, page: str) -> None:
+        if self.on_navigate is not None:
+            self.on_navigate(page)

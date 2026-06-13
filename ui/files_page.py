@@ -24,8 +24,8 @@ class FilesPage(ctk.CTkFrame):
         )
         actions = ctk.CTkFrame(header_row, fg_color="transparent")
         actions.grid(row=0, column=1, sticky="e")
-        ToolbarButton(actions, "Upload").grid(row=0, column=0, padx=(0, 8))
-        ToolbarButton(actions, "New Folder", accent=True).grid(row=0, column=1)
+        ToolbarButton(actions, "Upload", enabled=False).grid(row=0, column=0, padx=(0, 8))
+        ToolbarButton(actions, "New Folder", accent=True, enabled=False).grid(row=0, column=1)
 
         explorer = Panel(self)
         explorer.grid(row=1, column=0, padx=24, pady=(0, 24), sticky="nsew")
@@ -47,6 +47,7 @@ class FilesPage(ctk.CTkFrame):
                 hover_color="#18181c",
                 text_color=ACCENT if index == 1 else TEXT_MUTED,
                 corner_radius=7,
+                state="disabled",
             ).grid(row=index, column=0, padx=10, pady=2, sticky="ew")
 
         file_area = ctk.CTkFrame(explorer, fg_color=PANEL_DEEP, corner_radius=8, border_width=1, border_color=BORDER)
@@ -56,6 +57,6 @@ class FilesPage(ctk.CTkFrame):
         SectionTitle(file_area, "Downloads", "Device path: /sdcard/Download").grid(
             row=0, column=0, padx=18, pady=(16, 10), sticky="ew"
         )
-        EmptyState(file_area, "No file records loaded", "Select an authorized device to browse Android storage.", "DIR").grid(
+        EmptyState(file_area, "No file records loaded", "Select an authorized device to browse Android storage.", "folder").grid(
             row=1, column=0
         )
