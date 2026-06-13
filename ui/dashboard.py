@@ -4,13 +4,14 @@ import customtkinter as ctk
 
 from services.adb_service import ADBService
 from ui.components import PageHeader, StatCard
+from ui.theme import APP_BG, SURFACE
 
 
 class DashboardPage(ctk.CTkFrame):
     """Device overview and quick actions."""
 
     def __init__(self, master: ctk.CTkFrame, adb_service: ADBService, title: str = "Dashboard") -> None:
-        super().__init__(master, fg_color="#0b1020", corner_radius=0)
+        super().__init__(master, fg_color=APP_BG, corner_radius=0)
         self.adb_service = adb_service
         self.cards: dict[str, StatCard] = {}
         self._build(title)
@@ -43,7 +44,7 @@ class DashboardPage(ctk.CTkFrame):
             card.grid(row=index // 4, column=index % 4, padx=6, pady=6, sticky="nsew")
             self.cards[label] = card
 
-        actions = ctk.CTkFrame(self, fg_color="#111827", corner_radius=14)
+        actions = ctk.CTkFrame(self, fg_color=SURFACE, corner_radius=14)
         actions.grid(row=2, column=0, padx=28, pady=22, sticky="new")
         actions.grid_columnconfigure((0, 1, 2), weight=1, uniform="actions")
 

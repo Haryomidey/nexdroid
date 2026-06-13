@@ -6,13 +6,14 @@ import customtkinter as ctk
 
 from services.adb_service import ADBService
 from ui.components import PageHeader
+from ui.theme import APP_BG, DANGER_MUTED, SURFACE_DEEP
 
 
 class LogsPage(ctk.CTkFrame):
     """ADB log viewer."""
 
     def __init__(self, master: ctk.CTkFrame, adb_service: ADBService) -> None:
-        super().__init__(master, fg_color="#0b1020", corner_radius=0)
+        super().__init__(master, fg_color=APP_BG, corner_radius=0)
         self.adb_service = adb_service
         self._build()
 
@@ -25,10 +26,10 @@ class LogsPage(ctk.CTkFrame):
         toolbar = ctk.CTkFrame(self, fg_color="transparent")
         toolbar.grid(row=1, column=0, padx=28, sticky="ew")
         ctk.CTkButton(toolbar, text="Load Snapshot", command=self._load_logs).grid(row=0, column=0)
-        ctk.CTkButton(toolbar, text="Clear", fg_color="#374151", command=lambda: self.log_box.delete("1.0", "end")).grid(
+        ctk.CTkButton(toolbar, text="Clear", fg_color=DANGER_MUTED, command=lambda: self.log_box.delete("1.0", "end")).grid(
             row=0, column=1, padx=10
         )
-        self.log_box = ctk.CTkTextbox(self, fg_color="#020617", corner_radius=14)
+        self.log_box = ctk.CTkTextbox(self, fg_color=SURFACE_DEEP, corner_radius=14)
         self.log_box.grid(row=2, column=0, padx=28, pady=18, sticky="nsew")
 
     def _load_logs(self) -> None:

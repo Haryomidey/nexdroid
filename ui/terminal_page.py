@@ -6,13 +6,14 @@ import customtkinter as ctk
 
 from services.adb_service import ADBService
 from ui.components import PageHeader
+from ui.theme import APP_BG, SURFACE_DEEP
 
 
 class TerminalPage(ctk.CTkFrame):
     """Built-in ADB terminal."""
 
     def __init__(self, master: ctk.CTkFrame, adb_service: ADBService) -> None:
-        super().__init__(master, fg_color="#0b1020", corner_radius=0)
+        super().__init__(master, fg_color=APP_BG, corner_radius=0)
         self.adb_service = adb_service
         self._build()
 
@@ -30,7 +31,7 @@ class TerminalPage(ctk.CTkFrame):
         self.command_entry.bind("<Return>", lambda _event: self._run_command())
         ctk.CTkButton(command_bar, text="Run", command=self._run_command).grid(row=0, column=1)
 
-        self.output = ctk.CTkTextbox(self, fg_color="#020617", corner_radius=14)
+        self.output = ctk.CTkTextbox(self, fg_color=SURFACE_DEEP, corner_radius=14)
         self.output.grid(row=2, column=0, padx=28, pady=18, sticky="nsew")
 
     def _run_command(self) -> None:

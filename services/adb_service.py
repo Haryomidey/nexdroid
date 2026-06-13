@@ -3,6 +3,7 @@ from __future__ import annotations
 import shlex
 import subprocess
 from dataclasses import dataclass
+import re
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,29 @@ class ADBService:
     def list_packages(self) -> list[str]:
         output = self.shell("pm list packages -f")
         return [line.strip() for line in output.splitlines() if line.strip()]
+
+    def enable_wireless_debugging(self, port: int = 5555) -> str:
+        return self._run(["tcpip", str(port)], timeout=12)
+
+    def connect_wireless(self, host: str, port: int = 5555) -> str:
+        target = host if ":" in host else f"{host}:{port}"
+        return self._run(["connect", target], timeout=15)
+
+    def disconnect_wireless(self, host: str, port: int = 5555) -> str:
+        target = host if ":" in host else f"{host}:{port}"
+        return self._run(["disconnect", target], timeout=12)
+
+    def get_wifi_ip(self) -> str | None:
+        output = self.shell("ip addr show wlan0")
+        match = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)/", output)
+        if match:
+            return match.group(1)
+
+        output = self.shell("ifconfig wlan0")
+        match = re.search(r"inet(?: addr:)?\s*(\d+\.\d+\.\d+\.\d+)", output)
+        if match:
+            return match.group(1)
+        return None
 
     def logcat_snapshot(self, lines: int = 200) -> str:
         return self._run(["logcat", "-d", "-t", str(lines)], timeout=18)

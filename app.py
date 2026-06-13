@@ -15,6 +15,7 @@ from ui.mirror_page import MirrorPage
 from ui.settings_page import SettingsPage
 from ui.sidebar import Sidebar
 from ui.terminal_page import TerminalPage
+from ui.theme import APP_BG, BADGE_CONNECTED, BADGE_IDLE, TOP_BAR_BG
 from utils.config import AppConfig
 from workers.device_worker import DeviceWorker
 
@@ -23,15 +24,15 @@ class NexDroidApp(ctk.CTk):
     """Main desktop shell for NexDroid Control Center."""
 
     def __init__(self) -> None:
-        super().__init__()
-        ctk.set_appearance_mode("dark")
+        self.config_model = AppConfig.load()
+        ctk.set_appearance_mode(self.config_model.theme)
         ctk.set_default_color_theme("blue")
+        super().__init__()
 
         self.title("NexDroid Control Center")
         self.geometry("1280x820")
         self.minsize(1040, 680)
 
-        self.config_model = AppConfig.load()
         self.event_queue: queue.Queue[dict[str, object]] = queue.Queue()
         self.adb_service = ADBService(adb_path=self.config_model.adb_path)
         self.device_worker = DeviceWorker(self.adb_service, self.event_queue)
@@ -51,7 +52,7 @@ class NexDroidApp(ctk.CTk):
         self.sidebar = Sidebar(self, on_select=self.show_page)
         self.sidebar.grid(row=0, column=0, rowspan=2, sticky="nsew")
 
-        self.top_bar = ctk.CTkFrame(self, height=64, fg_color="#111827", corner_radius=0)
+        self.top_bar = ctk.CTkFrame(self, height=64, fg_color=TOP_BAR_BG, corner_radius=0)
         self.top_bar.grid(row=0, column=1, sticky="ew")
         self.top_bar.grid_columnconfigure(1, weight=1)
 
@@ -75,12 +76,12 @@ class NexDroidApp(ctk.CTk):
             text="ADB idle",
             height=30,
             corner_radius=16,
-            fg_color="#1f2937",
+            fg_color=BADGE_IDLE,
             padx=14,
         )
         self.connection_badge.grid(row=0, column=2, padx=24, pady=16, sticky="e")
 
-        self.content = ctk.CTkFrame(self, fg_color="#0b1020", corner_radius=0)
+        self.content = ctk.CTkFrame(self, fg_color=APP_BG, corner_radius=0)
         self.content.grid(row=1, column=1, sticky="nsew")
         self.content.grid_rowconfigure(0, weight=1)
         self.content.grid_columnconfigure(0, weight=1)
@@ -96,7 +97,7 @@ class NexDroidApp(ctk.CTk):
             "Logs": lambda parent: LogsPage(parent, self.adb_service),
             "Developer Tools": lambda parent: DashboardPage(parent, self.adb_service, title="Developer Tools"),
             "ADB Terminal": lambda parent: TerminalPage(parent, self.adb_service),
-            "Settings": lambda parent: SettingsPage(parent, self.config_model),
+            "Settings": lambda parent: SettingsPage(parent, self.config_model, on_theme_change=self.set_theme),
         }
 
         for name, factory in page_factories.items():
@@ -124,11 +125,19 @@ class NexDroidApp(ctk.CTk):
                     serial = first.get("serial", "Unknown") if isinstance(first, dict) else "Unknown"
                     status = first.get("status", "device") if isinstance(first, dict) else "device"
                     self.device_label.configure(text=f"{serial}")
-                    self.connection_badge.configure(text=f"{device_count} device(s) - {status}", fg_color="#064e3b")
+                    self.connection_badge.configure(text=f"{device_count} device(s) - {status}", fg_color=BADGE_CONNECTED)
                 else:
                     self.device_label.configure(text="No device connected")
-                    self.connection_badge.configure(text="ADB idle", fg_color="#1f2937")
+                    self.connection_badge.configure(text="ADB idle", fg_color=BADGE_IDLE)
         self.after(500, self._drain_events)
+
+    def set_theme(self, theme: str) -> None:
+        normalized = theme.lower()
+        if normalized not in {"dark", "light", "system"}:
+            normalized = "dark"
+        self.config_model.theme = normalized
+        self.config_model.save()
+        ctk.set_appearance_mode(normalized)
 
     def _on_close(self) -> None:
         self.device_worker.stop()
