@@ -5,8 +5,8 @@ import threading
 import customtkinter as ctk
 
 from services.adb_service import ADBService
-from ui.components import PageHeader
-from ui.theme import APP_BG, SURFACE_DEEP
+from ui.components import PageHeader, Panel, ToolbarButton, themed_entry
+from ui.theme import ACCENT, APP_BG, BORDER, PANEL_DEEP, TEXT_SOFT
 
 
 class TerminalPage(ctk.CTkFrame):
@@ -20,19 +20,23 @@ class TerminalPage(ctk.CTkFrame):
     def _build(self) -> None:
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1)
-        PageHeader(self, "ADB Terminal", "Run ADB commands with history and output capture.").grid(
-            row=0, column=0, padx=28, pady=(26, 18), sticky="ew"
+        PageHeader(self, "ADB Console", "Run ADB commands with history and output capture.").grid(
+            row=0, column=0, padx=24, pady=(22, 16), sticky="ew"
         )
         command_bar = ctk.CTkFrame(self, fg_color="transparent")
-        command_bar.grid(row=1, column=0, padx=28, sticky="ew")
+        command_bar.grid(row=1, column=0, padx=24, sticky="ew")
         command_bar.grid_columnconfigure(0, weight=1)
-        self.command_entry = ctk.CTkEntry(command_bar, placeholder_text="Example: shell getprop ro.product.model", height=40)
+        self.command_entry = themed_entry(command_bar, "Example: shell getprop ro.product.model")
         self.command_entry.grid(row=0, column=0, sticky="ew", padx=(0, 12))
         self.command_entry.bind("<Return>", lambda _event: self._run_command())
-        ctk.CTkButton(command_bar, text="Run", command=self._run_command).grid(row=0, column=1)
+        ToolbarButton(command_bar, "Run", command=self._run_command, accent=True).grid(row=0, column=1)
 
-        self.output = ctk.CTkTextbox(self, fg_color=SURFACE_DEEP, corner_radius=14)
-        self.output.grid(row=2, column=0, padx=28, pady=18, sticky="nsew")
+        terminal_panel = Panel(self)
+        terminal_panel.grid(row=2, column=0, padx=24, pady=18, sticky="nsew")
+        terminal_panel.grid_columnconfigure(0, weight=1)
+        terminal_panel.grid_rowconfigure(0, weight=1)
+        self.output = ctk.CTkTextbox(terminal_panel, fg_color=PANEL_DEEP, corner_radius=10, border_width=1, border_color=BORDER, text_color=TEXT_SOFT, font=ctk.CTkFont(family="Consolas", size=12))
+        self.output.grid(row=0, column=0, padx=12, pady=12, sticky="nsew")
 
     def _run_command(self) -> None:
         command = self.command_entry.get().strip()

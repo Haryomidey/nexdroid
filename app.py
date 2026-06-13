@@ -15,7 +15,7 @@ from ui.mirror_page import MirrorPage
 from ui.settings_page import SettingsPage
 from ui.sidebar import Sidebar
 from ui.terminal_page import TerminalPage
-from ui.theme import APP_BG, BADGE_CONNECTED, BADGE_IDLE, TOP_BAR_BG
+from ui.theme import ACCENT, APP_BG, BADGE_CONNECTED, BADGE_IDLE, BORDER, PANEL, TEXT_MUTED, TOP_BAR_BG
 from utils.config import AppConfig
 from workers.device_worker import DeviceWorker
 
@@ -52,14 +52,22 @@ class NexDroidApp(ctk.CTk):
         self.sidebar = Sidebar(self, on_select=self.show_page)
         self.sidebar.grid(row=0, column=0, rowspan=2, sticky="nsew")
 
-        self.top_bar = ctk.CTkFrame(self, height=64, fg_color=TOP_BAR_BG, corner_radius=0)
+        self.top_bar = ctk.CTkFrame(
+            self,
+            height=64,
+            fg_color=TOP_BAR_BG,
+            corner_radius=0,
+            border_width=1,
+            border_color=BORDER,
+        )
         self.top_bar.grid(row=0, column=1, sticky="ew")
         self.top_bar.grid_columnconfigure(1, weight=1)
 
         self.device_label = ctk.CTkLabel(
             self.top_bar,
-            text="No device connected",
+            text="Select Device slot...",
             font=ctk.CTkFont(size=15, weight="bold"),
+            text_color="#e5e7eb",
         )
         self.device_label.grid(row=0, column=0, padx=24, pady=18, sticky="w")
 
@@ -67,19 +75,32 @@ class NexDroidApp(ctk.CTk):
             self.top_bar,
             placeholder_text="Search apps, files, commands, logs...",
             height=36,
-            corner_radius=10,
+            corner_radius=8,
+            fg_color=PANEL,
+            border_color=BORDER,
+            text_color="#f4f4f5",
+            placeholder_text_color=TEXT_MUTED,
         )
         self.search_entry.grid(row=0, column=1, padx=16, pady=14, sticky="ew")
 
-        self.connection_badge = ctk.CTkLabel(
+        self.connection_badge = ctk.CTkFrame(
             self.top_bar,
-            text="ADB idle",
             height=30,
-            corner_radius=16,
+            corner_radius=999,
             fg_color=BADGE_IDLE,
-            padx=14,
+            border_width=1,
+            border_color=BORDER,
         )
         self.connection_badge.grid(row=0, column=2, padx=24, pady=16, sticky="e")
+        self.connection_badge.grid_propagate(False)
+
+        self.connection_badge_label = ctk.CTkLabel(
+            self.connection_badge,
+            text="ADB idle",
+            text_color=ACCENT,
+            font=ctk.CTkFont(size=12, weight="bold"),
+        )
+        self.connection_badge_label.grid(row=0, column=0, padx=14, pady=4)
 
         self.content = ctk.CTkFrame(self, fg_color=APP_BG, corner_radius=0)
         self.content.grid(row=1, column=1, sticky="nsew")
@@ -90,13 +111,14 @@ class NexDroidApp(ctk.CTk):
         page_factories: dict[str, Callable[[ctk.CTkFrame], ctk.CTkFrame]] = {
             "Dashboard": lambda parent: DashboardPage(parent, self.adb_service),
             "Devices": lambda parent: DevicePage(parent, self.adb_service),
-            "Screen Mirror": lambda parent: MirrorPage(parent),
+            "Mirror": lambda parent: MirrorPage(parent),
             "Apps": lambda parent: AppsPage(parent, self.adb_service),
             "Files": lambda parent: FilesPage(parent),
-            "Media": lambda parent: DashboardPage(parent, self.adb_service, title="Media"),
+            "Screenshots": lambda parent: DashboardPage(parent, self.adb_service, title="Screenshots"),
+            "Recordings": lambda parent: DashboardPage(parent, self.adb_service, title="Recordings"),
             "Logs": lambda parent: LogsPage(parent, self.adb_service),
             "Developer Tools": lambda parent: DashboardPage(parent, self.adb_service, title="Developer Tools"),
-            "ADB Terminal": lambda parent: TerminalPage(parent, self.adb_service),
+            "ADB Console": lambda parent: TerminalPage(parent, self.adb_service),
             "Settings": lambda parent: SettingsPage(parent, self.config_model, on_theme_change=self.set_theme),
         }
 
@@ -125,10 +147,12 @@ class NexDroidApp(ctk.CTk):
                     serial = first.get("serial", "Unknown") if isinstance(first, dict) else "Unknown"
                     status = first.get("status", "device") if isinstance(first, dict) else "device"
                     self.device_label.configure(text=f"{serial}")
-                    self.connection_badge.configure(text=f"{device_count} device(s) - {status}", fg_color=BADGE_CONNECTED)
+                    self.connection_badge_label.configure(text=f"{device_count} device(s) - {status}")
+                    self.connection_badge.configure(fg_color=BADGE_CONNECTED)
                 else:
                     self.device_label.configure(text="No device connected")
-                    self.connection_badge.configure(text="ADB idle", fg_color=BADGE_IDLE)
+                    self.connection_badge_label.configure(text="ADB idle")
+                    self.connection_badge.configure(fg_color=BADGE_IDLE)
         self.after(500, self._drain_events)
 
     def set_theme(self, theme: str) -> None:

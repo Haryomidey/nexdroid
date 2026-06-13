@@ -1,17 +1,28 @@
 from __future__ import annotations
 
 
-APP_BG = ("#f4f7fb", "#0b1020")
-SURFACE = ("#ffffff", "#111827")
-SURFACE_MUTED = ("#edf2f7", "#0f172a")
-SURFACE_DEEP = ("#e5eaf1", "#020617")
-SIDEBAR_BG = ("#eef3f8", "#080d1a")
-TOP_BAR_BG = ("#ffffff", "#111827")
-TEXT_MUTED = ("#5f6f85", "#93a4b7")
-TEXT_SUBTLE = ("#7a8799", "#6b7280")
-TEXT_NAV = ("#334155", "#cbd5e1")
-BADGE_IDLE = ("#e5e7eb", "#1f2937")
-BADGE_CONNECTED = ("#d1fae5", "#064e3b")
-ACTIVE_NAV = ("#2563eb", "#2563eb")
-HOVER_NAV = ("#dbeafe", "#172033")
-DANGER_MUTED = ("#cbd5e1", "#374151")
+APP_BG = "#09090b"
+SIDEBAR_BG = "#0d0d0f"
+TOP_BAR_BG = "#09090b"
+PANEL = "#121215"
+PANEL_SOFT = "#121215"
+PANEL_DEEP = "#0a0a0c"
+CARD = "#121215"
+CARD_HOVER = "#18181c"
+BORDER = "#1f2023"
+BORDER_BRIGHT = "#27272a"
+ACCENT = "#1da1f2"
+ACCENT_HOVER = "#1a8cd8"
+CYAN = "#22d3ee"
+TEXT = "#f4f4f5"
+TEXT_SOFT = "#d4d4d8"
+TEXT_MUTED = "#a1a1aa"
+TEXT_SUBTLE = "#71717a"
+TEXT_NAV = "#a1a1aa"
+SUCCESS = "#34d399"
+SUCCESS_BG = "#052e24"
+WARNING = "#f59e0b"
+DANGER = "#fb7185"
+BADGE_IDLE = "#121215"
+BADGE_CONNECTED = "#063b2f"
+DANGER_MUTED = "#18181c"

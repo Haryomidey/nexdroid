@@ -5,8 +5,8 @@ import threading
 import customtkinter as ctk
 
 from services.adb_service import ADBService
-from ui.components import PageHeader
-from ui.theme import APP_BG, SURFACE, SURFACE_MUTED
+from ui.components import PageHeader, Panel, SectionTitle, ToolbarButton, themed_entry
+from ui.theme import ACCENT, ACCENT_HOVER, APP_BG, BORDER, CARD, PANEL_DEEP, SUCCESS, TEXT, TEXT_MUTED, TEXT_SOFT, TEXT_SUBTLE
 
 
 class DevicePage(ctk.CTkFrame):
@@ -19,63 +19,134 @@ class DevicePage(ctk.CTkFrame):
 
     def _build(self) -> None:
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(2, weight=1)
-        PageHeader(self, "Devices", "Detect USB devices, manage authorization state, and reconnect ADB.").grid(
-            row=0, column=0, padx=28, pady=(26, 18), sticky="ew"
+        self.grid_rowconfigure(1, weight=1)
+
+        header_row = ctk.CTkFrame(self, fg_color="transparent")
+        header_row.grid(row=0, column=0, padx=24, pady=(22, 16), sticky="ew")
+        header_row.grid_columnconfigure(0, weight=1)
+        PageHeader(header_row, "Device Node Manager", "Manage USB connections and wireless LAN ADB bridges.").grid(
+            row=0, column=0, sticky="ew"
         )
+        ToolbarButton(header_row, "Re-scan Buses", command=self._refresh).grid(row=0, column=1, padx=(16, 0), sticky="e")
 
-        wireless_panel = ctk.CTkFrame(self, fg_color=SURFACE, corner_radius=14)
-        wireless_panel.grid(row=1, column=0, padx=28, pady=(0, 18), sticky="ew")
-        wireless_panel.grid_columnconfigure(1, weight=1)
+        grid = ctk.CTkFrame(self, fg_color="transparent")
+        grid.grid(row=1, column=0, padx=24, pady=(0, 24), sticky="nsew")
+        grid.grid_columnconfigure(0, weight=1)
+        grid.grid_columnconfigure(1, weight=2)
+        grid.grid_rowconfigure(0, weight=1)
 
-        ctk.CTkLabel(
-            wireless_panel,
-            text="Wireless ADB",
-            font=ctk.CTkFont(size=18, weight="bold"),
-        ).grid(row=0, column=0, padx=18, pady=(18, 4), sticky="w")
+        wireless_panel = Panel(grid)
+        wireless_panel.grid(row=0, column=0, padx=(0, 12), sticky="nsew")
+        wireless_panel.grid_columnconfigure(0, weight=1)
+
+        SectionTitle(wireless_panel, "Wireless Debug Link", "Create a TCP bridge after one USB approval.").grid(
+            row=0, column=0, padx=18, pady=(18, 14), sticky="ew"
+        )
 
         ctk.CTkLabel(
             wireless_panel,
             text="Connect once by USB, approve debugging on the phone, then let NexDroid switch it to Wi-Fi.",
-        ).grid(row=1, column=0, columnspan=3, padx=18, pady=(0, 14), sticky="w")
+            text_color=TEXT_MUTED,
+            wraplength=320,
+            justify="left",
+        ).grid(row=1, column=0, padx=18, pady=(0, 14), sticky="w")
 
-        self.ip_entry = ctk.CTkEntry(wireless_panel, placeholder_text="Phone IP address", height=38)
-        self.ip_entry.grid(row=2, column=0, padx=18, pady=(0, 16), sticky="ew")
+        ctk.CTkLabel(wireless_panel, text="Target IP Address", text_color=TEXT_SUBTLE, font=ctk.CTkFont(size=11)).grid(
+            row=2, column=0, padx=18, pady=(0, 5), sticky="w"
+        )
+        self.ip_entry = themed_entry(wireless_panel, "e.g. 192.168.1.135")
+        self.ip_entry.grid(row=3, column=0, padx=18, pady=(0, 12), sticky="ew")
 
-        ctk.CTkButton(
+        buttons = ctk.CTkFrame(wireless_panel, fg_color="transparent")
+        buttons.grid(row=4, column=0, padx=18, pady=(0, 14), sticky="ew")
+        buttons.grid_columnconfigure((0, 1), weight=1, uniform="wifi")
+        ToolbarButton(buttons, "Auto Connect", command=self._auto_connect_wireless, accent=True).grid(
+            row=0, column=0, padx=(0, 6), sticky="ew"
+        )
+        ToolbarButton(buttons, "Connect IP", command=self._connect_entered_ip).grid(
+            row=0, column=1, padx=(6, 0), sticky="ew"
+        )
+
+        guidance = Panel(wireless_panel, fg_color="#071721")
+        guidance.grid(row=5, column=0, padx=18, pady=(0, 14), sticky="ew")
+        ctk.CTkLabel(
+            guidance,
+            text="Wireless Setup Guidance",
+            text_color=ACCENT,
+            font=ctk.CTkFont(size=12, weight="bold"),
+        ).grid(row=0, column=0, padx=14, pady=(12, 2), sticky="w")
+        ctk.CTkLabel(
+            guidance,
+            text="Keep phone and PC on the same Wi-Fi network. Android 11+ may use a dynamic wireless debugging port.",
+            text_color=TEXT_MUTED,
+            wraplength=300,
+            justify="left",
+        ).grid(row=1, column=0, padx=14, pady=(0, 12), sticky="w")
+
+        self.wireless_status = ctk.CTkTextbox(
             wireless_panel,
-            text="Auto Connect",
-            height=38,
-            command=self._auto_connect_wireless,
-        ).grid(row=2, column=1, padx=(0, 10), pady=(0, 16), sticky="w")
-
-        ctk.CTkButton(
-            wireless_panel,
-            text="Connect IP",
-            height=38,
-            fg_color="#2563eb",
-            command=self._connect_entered_ip,
-        ).grid(row=2, column=2, padx=(0, 18), pady=(0, 16), sticky="e")
-
-        self.wireless_status = ctk.CTkTextbox(wireless_panel, height=92, fg_color=SURFACE_MUTED, corner_radius=10)
-        self.wireless_status.grid(row=3, column=0, columnspan=3, padx=18, pady=(0, 18), sticky="ew")
+            height=110,
+            fg_color=PANEL_DEEP,
+            corner_radius=8,
+            border_width=1,
+            border_color=BORDER,
+            text_color=TEXT_SOFT,
+        )
+        self.wireless_status.grid(row=6, column=0, padx=18, pady=(0, 18), sticky="ew")
         self._set_wireless_status("Ready. Plug in with USB, then click Auto Connect.\n")
 
-        self.device_list = ctk.CTkTextbox(self, height=260, fg_color=SURFACE, corner_radius=14)
-        self.device_list.grid(row=2, column=0, padx=28, sticky="nsew")
-        self.device_list.insert("1.0", "Connected devices will appear here.\n")
-
-        refresh = ctk.CTkButton(self, text="Refresh Devices", command=self._refresh)
-        refresh.grid(row=3, column=0, padx=28, pady=18, sticky="w")
+        list_panel = Panel(grid)
+        list_panel.grid(row=0, column=1, padx=(12, 0), sticky="nsew")
+        list_panel.grid_columnconfigure(0, weight=1)
+        list_panel.grid_rowconfigure(1, weight=1)
+        SectionTitle(list_panel, "Discovered Bus Terminals", "Connected USB and Wi-Fi debug sessions.").grid(
+            row=0, column=0, padx=18, pady=(18, 10), sticky="ew"
+        )
+        self.device_rows = ctk.CTkScrollableFrame(list_panel, fg_color="transparent")
+        self.device_rows.grid(row=1, column=0, padx=18, pady=(0, 18), sticky="nsew")
+        self.device_rows.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(
+            self.device_rows,
+            text="No devices detected. Connect a phone by USB or use Wireless ADB.",
+            text_color=TEXT_MUTED,
+            font=ctk.CTkFont(size=13),
+        )
+        self._refresh()
 
     def _refresh(self) -> None:
         devices = self.adb_service.list_devices()
-        self.device_list.delete("1.0", "end")
+        for child in self.device_rows.winfo_children():
+            child.destroy()
         if not devices:
-            self.device_list.insert("1.0", "No devices detected.\n")
+            ctk.CTkLabel(
+                self.device_rows,
+                text="No devices detected. Connect a phone by USB or use Wireless ADB.",
+                text_color=TEXT_MUTED,
+                font=ctk.CTkFont(size=13),
+            ).grid(row=0, column=0, padx=18, pady=36)
             return
-        for device in devices:
-            self.device_list.insert("end", f"{device.serial}\t{device.status}\n")
+        for index, device in enumerate(devices):
+            self._add_device_row(index, device.serial, device.status)
+
+    def _add_device_row(self, row: int, serial: str, status: str) -> None:
+        is_ready = status == "device"
+        row_frame = Panel(self.device_rows, fg_color="#121215")
+        row_frame.grid(row=row, column=0, pady=6, sticky="ew")
+        row_frame.grid_columnconfigure(1, weight=1)
+        badge_color = "#052e24" if is_ready else "#2a1515"
+        badge_text = SUCCESS if is_ready else "#fb7185"
+        ctk.CTkLabel(row_frame, text="USB" if ":" not in serial else "LAN", text_color=ACCENT, fg_color="#0d2230", corner_radius=6, width=46).grid(
+            row=0, column=0, padx=14, pady=14, sticky="w"
+        )
+        ctk.CTkLabel(row_frame, text=serial, text_color=TEXT, font=ctk.CTkFont(size=14, weight="bold")).grid(
+            row=0, column=1, padx=(0, 12), pady=(12, 2), sticky="w"
+        )
+        ctk.CTkLabel(row_frame, text="Android Debug Bridge endpoint", text_color=TEXT_SUBTLE, font=ctk.CTkFont(size=11)).grid(
+            row=1, column=1, padx=(0, 12), pady=(0, 12), sticky="w"
+        )
+        ctk.CTkLabel(row_frame, text=status.upper(), text_color=badge_text, fg_color=badge_color, corner_radius=999, padx=10, pady=3).grid(
+            row=0, column=2, rowspan=2, padx=14, pady=14, sticky="e"
+        )
 
     def _auto_connect_wireless(self) -> None:
         self._set_wireless_status("Switching connected USB device to wireless ADB...\n")
